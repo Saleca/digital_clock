@@ -22,7 +22,7 @@ typedef struct
 } static_file_t;
 
 extern const uint8_t favicon_start[] asm("_binary_favicon_svg_start");
-extern const uint8_t favicon_end[]   asm("_binary_favicon_svg_end");
+extern const uint8_t favicon_end[] asm("_binary_favicon_svg_end");
 extern const uint8_t index_start[] asm("_binary_index_html_start");
 extern const uint8_t index_end[] asm("_binary_index_html_end");
 extern const uint8_t css_start[] asm("_binary_style_css_start");
@@ -40,7 +40,7 @@ static const static_file_t files[] = {
 static void configure_mdns();
 static esp_err_t generic_handler(httpd_req_t *req);
 static esp_err_t mdns_handler(httpd_req_t *req);
-esp_err_t web_handler(httpd_req_t *req);
+esp_err_t file_handler(httpd_req_t *req);
 
 static bool routing_enabled = true;
 static httpd_handle_t server = NULL;
@@ -55,16 +55,15 @@ static route_t mdns_route = {
 static route_t index_route = {
     .uri = "/",
     .method = HTTP_GET,
-    .route_handler = web_handler,
+    .route_handler = file_handler,
     .args = NULL,
 };
 static route_t files_route = {
     .uri = "/files/*",
     .method = HTTP_GET,
-    .route_handler = web_handler,
+    .route_handler = file_handler,
     .args = NULL,
 };
-
 
 static char *current_mdns;
 
@@ -234,14 +233,14 @@ static void configure_mdns()
     ESP_LOGI(TAG, "settings available from: %s.local/", current_mdns);
 }
 
-esp_err_t web_handler(httpd_req_t *req)
+esp_err_t file_handler(httpd_req_t *req)
 {
     for (int i = 0; i < sizeof(files) / sizeof(files[0]); i++)
     {
         if (strcmp(req->uri, files[i].uri) == 0)
         {
             httpd_resp_set_type(req, files[i].type);
-            httpd_resp_set_hdr(req, "Cache-Control", "max-age=86400");
+            httpd_resp_set_hdr(req, "Cache-Control", "no-cache, must-revalidate");
             httpd_resp_send(req, (const char *)files[i].start,
                             files[i].end - files[i].start);
             return ESP_OK;
@@ -250,4 +249,3 @@ esp_err_t web_handler(httpd_req_t *req)
     httpd_resp_send_404(req);
     return ESP_OK;
 }
-
