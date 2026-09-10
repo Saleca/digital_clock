@@ -30,7 +30,8 @@
         <h2>mDNS</h2>
         <label>hostname</label>
         <input type="text" id="mdns-host" placeholder="sala" />
-        <p style="font-size:0.78rem;color:#3a5060;margin-bottom:0.75rem;margin-top:-0.25rem">interface teria acesso por <span id="mdns-preview">sala</span>.local</p>
+        <p style="font-size:0.78rem;color:#3a5060;margin-bottom:0.75rem;margin-top:-0.25rem">interface teria acesso por
+            <span id="mdns-preview">sala</span>.local</p>
         <div class="btn-row">
             <button class="btn-p" onclick="save('mdns')">save</button>
         </div>
@@ -39,10 +40,11 @@
 
     <section>
         <h2>Update</h2>
+        <button class="btn-p" onclick="check4update()">check remote</button>
         <label>ficheiro .bin com o novo firmware</label>
         <input type="file" id="fw" accept=".bin">
         <div class="btn-row">
-            <button class="btn-p" onclick="uploadFirmware(document.getElementById('fw').files[0])">Upload</button>
+            <button class="btn-p" onclick="upload_firmware(document.getElementById('fw').files[0])">Upload</button>
         </div>
         <div class="feedback" id="fb-flash"></div>
     </section>

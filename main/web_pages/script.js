@@ -7,6 +7,7 @@ const routes = {
     get_clock: '/get/clock',
     post_clock_preview: '/post/clock',
     post_clock_save: '/post/clock_save',
+    get_version: '/get/version',
     post_flash: '/post/flash'
 };
 
@@ -73,7 +74,77 @@ async function save(target) {
     }
 }
 
-async function uploadFirmware(file) {
+const repo_url = 'https://raw.githubusercontent.com/Saleca/digital_clock/main/build';
+const firmware_url = repo_url + '/digital_clock.bin';
+const version_url = repo_url + '/version.json';
+let current_version = "0.0.0";
+
+function is_new_ver_recent(old_ver, new_ver) {
+    const old_split = old_ver.split('.').map(Number);
+    const new_split = new_ver.split('.').map(Number);
+    const len = Math.max(old_split.length, new_split.length);
+
+    for (let i = 0; i < len; i++) {
+        const old_value = old_split[i] || 0;
+        const new_value = new_split[i] || 0;
+        if (old_value < new_value) {
+            return true;
+        }
+        else if (old_value > new_value) {
+            return false;
+        }
+    }
+    return false;
+}
+
+async function fetch_remote_version() {
+    const response = await fetch(version_url);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch version: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.project_version;
+}
+async function fetch_current_version() {
+    const response = await fetch(routes.get_version); // adjust to your actual route
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch device version: ${response.status} ${response.statusText}`);
+    }
+
+    const text = await response.text();
+    current_version = text.trim();
+}
+
+async function fetch_firmware() {
+    const response = await fetch(firmware_url);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const file = new File([blob], 'digital_clock.bin', { type: 'application/octet-stream' });
+    return file;
+}
+
+function check4update() {
+    fetch_remote_version().then(remote_version => {
+        if (is_new_ver_recent(current_version, remote_version)) {
+            feedback('flash', true, 'downloading firmware');
+            return fetch_firmware().then(file => {
+                upload_firmware(file);
+            });
+        } else {
+            feedback('flash', true, 'up to date');
+        }
+    })
+        .catch(err => console.error('Error checking for update:', err));
+}
+
+async function upload_firmware(file) {
     try {
         const res = await fetch(routes.post_flash, {
             method: 'POST',
@@ -81,13 +152,14 @@ async function uploadFirmware(file) {
             body: file,
         });
         if (!res.ok) {
-            throw new Error(`OTA failed: ${res.status}`);
+            throw new Error(`update failed: ${res.status}`);
         }
-        feedback('flash', true, res.text());
+        feedback('flash', true, await res.text());
     } catch {
         feedback('flash', false, 'could not reach device');
     }
 }
+
 
 function settings_init() {
     document.getElementById('mdns-host')
@@ -313,6 +385,6 @@ function colour_pickers_init() {
         document.getElementById('card-second').classList.toggle('hidden-slot', !has_seconds_checkbox.checked);
         remove_preview_mode();
     });
-
+    fetch_current_version();
     load_clock_defaults();
 }

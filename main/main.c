@@ -15,7 +15,6 @@
 #include "time_manager.h"
 #include "clock_face.h"
 #include "debug_led.h"
-
 static const char *TAG = "LED_CLOCK";
 
 static void time_task(void *arg);
@@ -27,8 +26,8 @@ void app_main(void)
     esp_log_level_set("phy_init", ESP_LOG_WARN);
 
     const esp_app_desc_t *app_desc = esp_app_get_description();
-    ESP_LOGI(TAG, "Firmware version: %s", app_desc->version);
-
+    ESP_LOGI(TAG, "Firmware version: %s - %s %s", app_desc->version, app_desc->date, app_desc->time);
+    
     ledc_pwm_init();
     ledc_pwm_set_duty(20);
 

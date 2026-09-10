@@ -1,6 +1,7 @@
 .devcontainer
 .vscode
 build/*
+!build/version.json
 !build/digital_clock.bin
 /managed_components
 sdkconfig.old

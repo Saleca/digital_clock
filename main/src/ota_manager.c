@@ -1,22 +1,41 @@
 #include "ota_manager.h"
 #include "server_manager.h"
+#include "esp_app_desc.h"
 #include "esp_ota_ops.h"
 #include "esp_log.h"
 
 static const char *TAG = "OTA_MANAGER";
 
 static esp_err_t flash_handler(httpd_req_t *req);
+static esp_err_t version_handler(httpd_req_t *req);
 
-static route_t ota_route = {
+static route_t flash_route = {
     .uri = "/post/flash",
     .method = HTTP_POST,
     .route_handler = flash_handler,
     .args = NULL,
 };
 
+static route_t version_route = {
+    .uri = "/get/version",
+    .method = HTTP_GET,
+    .route_handler = version_handler,
+    .args = NULL,
+};
+
 void ota_manager_register_route()
 {
-    server_manager_add_route(&ota_route);
+    server_manager_add_route(&flash_route);
+    server_manager_add_route(&version_route);
+}
+
+static esp_err_t version_handler(httpd_req_t *req)
+{
+    const esp_app_desc_t *app_desc = esp_app_get_description();
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_sendstr(req, app_desc->version);
+
+    return ESP_OK;
 }
 
 static esp_err_t flash_handler(httpd_req_t *req)

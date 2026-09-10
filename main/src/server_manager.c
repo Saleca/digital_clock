@@ -62,6 +62,7 @@ static route_t files_route = {
     .args = NULL,
 };
 
+
 static char *current_mdns;
 
 void server_manager_init()
