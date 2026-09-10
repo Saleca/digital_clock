@@ -109,7 +109,7 @@ async function fetch_remote_version() {
     return data.project_version;
 }
 async function fetch_current_version() {
-    const response = await fetch(routes.get_version); // adjust to your actual route
+    const response = await fetch(routes.get_version + '?t=' + Date.now(), { cache: 'no-store' }); // adjust to your actual route
 
     if (!response.ok) {
         throw new Error(`Failed to fetch device version: ${response.status} ${response.statusText}`);
@@ -386,7 +386,9 @@ async function colour_pickers_init() {
         document.getElementById('card-second').classList.toggle('hidden-slot', !has_seconds_checkbox.checked);
         remove_preview_mode();
     });
+
     await fetch_current_version();
     console.log(`version: ${current_version}`);
+
     load_clock_defaults();
 }

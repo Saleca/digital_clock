@@ -34,7 +34,7 @@ static esp_err_t version_handler(httpd_req_t *req)
     const esp_app_desc_t *app_desc = esp_app_get_description();
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_sendstr(req, app_desc->version);
-
+    ESP_LOGI(TAG, "%s", app_desc->version);
     return ESP_OK;
 }
 

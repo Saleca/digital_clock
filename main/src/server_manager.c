@@ -7,6 +7,7 @@
 #include "cJSON.h"
 #include "nvs_flash.h"
 #include "mdns.h"
+#include "esp_app_desc.h"
 #include "esp_log.h"
 
 static const char *TAG = "SERVER_MANAGER";
@@ -31,10 +32,10 @@ extern const uint8_t js_start[] asm("_binary_script_js_start");
 extern const uint8_t js_end[] asm("_binary_script_js_end");
 
 static const static_file_t files[] = {
-    {"/file/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
     {"/", "text/html", index_start, index_end},
     {"/files/style.css", "text/css", css_start, css_end},
     {"/files/script.js", "application/javascript", js_start, js_end},
+    {"/files/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
 };
 
 static void configure_mdns();
@@ -235,15 +236,29 @@ static void configure_mdns()
 
 esp_err_t file_handler(httpd_req_t *req)
 {
-    for (int i = 0; i < sizeof(files) / sizeof(files[0]); i++)
+    for (int i = 0; i < sizeof(files) / sizeof(static_file_t); i++)
     {
         if (strcmp(req->uri, files[i].uri) == 0)
         {
-            httpd_resp_set_type(req, files[i].type);
+            const esp_app_desc_t *app_desc = esp_app_get_description();
+            char etag[40];
+            snprintf(etag, sizeof(etag), "\"%s\"", app_desc->version);
+
+            char client_etag[40] = {0};
+            if (httpd_req_get_hdr_value_str(req, "If-None-Match", client_etag, sizeof(client_etag)) == ESP_OK)
+            {
+                if (strcmp(client_etag, etag) == 0)
+                {
+                    httpd_resp_set_status(req, "304 Not Modified");
+                    return httpd_resp_send(req, NULL, 0);
+                }
+            }
+
             httpd_resp_set_hdr(req, "Cache-Control", "no-cache, must-revalidate");
-            httpd_resp_send(req, (const char *)files[i].start,
-                            files[i].end - files[i].start);
-            return ESP_OK;
+            httpd_resp_set_hdr(req, "ETag", etag);
+
+            httpd_resp_set_type(req, files[i].type);
+            return httpd_resp_send(req, (const char *)files[i].start, files[i].end - files[i].start);
         }
     }
     httpd_resp_send_404(req);
