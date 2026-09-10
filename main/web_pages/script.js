@@ -98,13 +98,14 @@ function is_new_ver_recent(old_ver, new_ver) {
 }
 
 async function fetch_remote_version() {
-    const response = await fetch(version_url);
+    const response = await fetch(version_url + '?t=' + Date.now(), { cache: 'no-store' });
 
     if (!response.ok) {
         throw new Error(`Failed to fetch version: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log(`remove version: ${data.project_version}`);
     return data.project_version;
 }
 async function fetch_current_version() {
@@ -305,7 +306,7 @@ async function load_clock_defaults() {
     }
 }
 
-function colour_pickers_init() {
+async function colour_pickers_init() {
     Object.entries(colour_pickers).forEach(([key, colour_picker]) => {
         const card = document.createElement('div');
         card.className = 'colour-card';
@@ -385,6 +386,7 @@ function colour_pickers_init() {
         document.getElementById('card-second').classList.toggle('hidden-slot', !has_seconds_checkbox.checked);
         remove_preview_mode();
     });
-    fetch_current_version();
+    await fetch_current_version();
+    console.log(`version: ${current_version}`);
     load_clock_defaults();
 }
