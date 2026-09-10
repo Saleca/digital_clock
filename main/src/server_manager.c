@@ -21,6 +21,8 @@ typedef struct
     const uint8_t *end;
 } static_file_t;
 
+extern const uint8_t favicon_start[] asm("_binary_favicon_svg_start");
+extern const uint8_t favicon_end[]   asm("_binary_favicon_svg_end");
 extern const uint8_t index_start[] asm("_binary_index_html_start");
 extern const uint8_t index_end[] asm("_binary_index_html_end");
 extern const uint8_t css_start[] asm("_binary_style_css_start");
@@ -29,6 +31,7 @@ extern const uint8_t js_start[] asm("_binary_script_js_start");
 extern const uint8_t js_end[] asm("_binary_script_js_end");
 
 static const static_file_t files[] = {
+    {"/file/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
     {"/", "text/html", index_start, index_end},
     {"/files/style.css", "text/css", css_start, css_end},
     {"/files/script.js", "application/javascript", js_start, js_end},
@@ -247,3 +250,4 @@ esp_err_t web_handler(httpd_req_t *req)
     httpd_resp_send_404(req);
     return ESP_OK;
 }
+
