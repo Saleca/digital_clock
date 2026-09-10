@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relogio</title>
+    <link rel="stylesheet" href="/files/style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Instrucoes</h1>
+    <!--check if is connected via STA or AP-->
+    <p>introduz as credenciais da wifi</p>
+    <section>
+        <h2>Wi-fi</h2>
+        <label>ssid</label>
+        <input type="text" id="wifi-ssid" placeholder="network name" /> <!-- add current ssid for placeholder-->
+        <label>password</label>
+        <div class="password-row">
+            <input type="password" id="wifi-pass" />
+            <button onclick="toggle_password_visibility(this, 'wifi-pass')" type="button">Show</button>
+        </div>
+        <button class="btn-p" onclick="save('wifi')">save</button>
+        <div class="feedback" id="fb-wifi"></div>
+    </section>
+
+    <section>
+        <h2>mDNS</h2>
+        <label>hostname</label>
+        <input type="text" id="mdns-host" placeholder="sala" />
+        <p style="font-size:0.78rem;color:#3a5060;margin-bottom:0.75rem;margin-top:-0.25rem">interface teria acesso por <span id="mdns-preview">sala</span>.local</p>
+        <div class="btn-row">
+            <button class="btn-p" onclick="save('mdns')">save</button>
+        </div>
+        <div class="feedback" id="fb-mdns"></div>
+    </section>
+
+    <section>
+        <h2>Update</h2>
+        <label>ficheiro .bin com o novo firmware</label>
+        <input type="file" id="fw" accept=".bin">
+        <div class="btn-row">
+            <button class="btn-p" onclick="uploadFirmware(document.getElementById('fw').files[0])">Upload</button>
+        </div>
+        <div class="feedback" id="fb-flash"></div>
+    </section>
+
+    <h2>Clock Face</h2>
+    <div class="subtitle">Pick colours, adjust brightness, then preview on device before saving.</div>
+
+    <div id="colour-cards"></div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="has-seconds" checked>
+        <label for="has-seconds">Show seconds hand</label>
+    </div>
+
+    <div class="slider-block">
+        <label><span>Day brightness</span><span id="day-val">80</span></label>
+        <input type="range" id="day-brightness" min="1" max="100" value="80">
+    </div>
+
+    <div class="slider-block">
+        <label><span>Night brightness</span><span id="night-val">20</span></label>
+        <input type="range" id="night-brightness" min="1" max="100" value="20">
+    </div>
+
+    <button class="btn-p" id="preview-colours-btn" onclick="preview_colours()">Preview</button>
+    <div class="feedback" id="fb-colour"></div>
+
+    <script src="/files/script.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', settings_init);
+        document.addEventListener('DOMContentLoaded', colour_pickers_init);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+.devcontainer
+.vscode
+build/*
+!build/digital_clock.bin
+/managed_components
+sdkconfig.old

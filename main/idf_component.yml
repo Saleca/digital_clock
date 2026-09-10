@@ -1,0 +1,4 @@
+dependencies:
+  led_strip: ^3.0.3
+  mdns: ^1.1.0
+  cjson: ^1.7.19
