@@ -1,5 +1,6 @@
 .devcontainer
 .vscode
+3d models
 build/*
 !build/version.json
 !build/digital_clock.bin

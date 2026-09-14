@@ -1,5 +1,6 @@
 #include "ota_manager.h"
 #include "server_manager.h"
+#include "debug_manager.h"
 #include "esp_app_desc.h"
 #include "esp_ota_ops.h"
 #include "esp_log.h"
@@ -48,7 +49,7 @@ static esp_err_t flash_handler(httpd_req_t *req)
 
     if (update_partition == NULL)
     {
-        ESP_LOGE(TAG, "No OTA partition found");
+        debug_manager_add_log("No OTA partition found");
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
@@ -56,8 +57,7 @@ static esp_err_t flash_handler(httpd_req_t *req)
     esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "esp_ota_begin failed: %s", esp_err_to_name(err));
-
+        debug_manager_add_log("esp_ota_begin failed: %s", esp_err_to_name(err));
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
@@ -97,7 +97,9 @@ static esp_err_t flash_handler(httpd_req_t *req)
     err = esp_ota_end(ota_handle);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "esp_ota_end failed: %s", esp_err_to_name(err));
+        debug_manager_add_log("esp_ota_end failed: %s", esp_err_to_name(err));
+
+        ESP_LOGE(TAG, );
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
@@ -105,7 +107,7 @@ static esp_err_t flash_handler(httpd_req_t *req)
     err = esp_ota_set_boot_partition(update_partition);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "esp_ota_set_boot_partition failed: %s", esp_err_to_name(err));
+        debug_manager_add_log("esp_ota_set_boot_partition failed: %s", esp_err_to_name(err));
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }

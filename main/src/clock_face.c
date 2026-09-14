@@ -4,6 +4,7 @@
 #include "server_manager.h"
 #include "time_manager.h"
 #include "wifi_manager.h"
+#include "debug_manager.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
@@ -301,14 +302,14 @@ static bool save_clock_pallet()
     esp_err_t err = nvs_open(TAG, NVS_READWRITE, &nvs);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "failled to open nvs");
+        debug_manager_add_log("failled to open nvs with err: %s. %s - %d", esp_err_to_name(err), __FILE__, __LINE__);
         return false;
     }
 
     err = nvs_set_blob(nvs, nvs_clock_face, &clock_face, sizeof(clock_face_t));
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "failled to save clock face");
+        debug_manager_add_log("failled to save clock face");
     }
     else
     {
@@ -325,7 +326,7 @@ static bool load_clock_pallet()
     esp_err_t err = nvs_open(TAG, NVS_READONLY, &nvs);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "failled to open nvs %s", esp_err_to_name(err));
+        debug_manager_add_log("failled to open nvs with err: %s. %s - %d", esp_err_to_name(err), __FILE__, __LINE__);
         return false;
     }
 
@@ -333,7 +334,7 @@ static bool load_clock_pallet()
     err = nvs_get_blob(nvs, nvs_clock_face, &clock_face, &len);
     if (err != ESP_OK || len != sizeof(clock_face_t))
     {
-        ESP_LOGE(TAG, "failled to load clock face");
+        debug_manager_add_log("failled to load clock face");
     }
 
     nvs_close(nvs);

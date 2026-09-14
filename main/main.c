@@ -14,7 +14,7 @@
 #include "server_manager.h"
 #include "time_manager.h"
 #include "clock_face.h"
-#include "debug_led.h"
+#include "debug_manager.h"
 static const char *TAG = "LED_CLOCK";
 
 static void time_task(void *arg);
@@ -28,9 +28,6 @@ void app_main(void)
     const esp_app_desc_t *app_desc = esp_app_get_description();
     ESP_LOGI(TAG, "Firmware version: %s - %s %s", app_desc->version, app_desc->date, app_desc->time);
     
-    ledc_pwm_init();
-    ledc_pwm_set_duty(20);
-
     esp_err_t err;
     err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -42,6 +39,9 @@ void app_main(void)
     if (err != ESP_OK)
     {
     }
+
+    debug_manager_init();
+    debug_manager_led_set_brightness(20);
 
     clock_face_init(GPIO_NUM_3);
     wifi_manager_init();
@@ -91,7 +91,7 @@ void app_main(void)
     }
     else
     {
-        ESP_LOGE(TAG, "Failled to initialize clock");
+        debug_manager_add_log("Failled to initialize clock");
     }
 }
 
@@ -105,7 +105,7 @@ static void time_task(void *arg)
 
     while (1)
     {
-        ledc_pwm_set_duty(10);
+        debug_manager_led_set_brightness(10);
         time_t now;
         time(&now);
 
@@ -141,7 +141,7 @@ static void time_task(void *arg)
             remaining_ms = (60000ULL - ((tv.tv_sec % 60) * 1000 + (tv.tv_usec / 1000)) + 10) / 10 * 10;
         }
 
-        ledc_pwm_disable();
+        debug_manager_disable_led();
         vTaskDelay(pdMS_TO_TICKS(remaining_ms));
     }
     vTaskDelete(NULL);

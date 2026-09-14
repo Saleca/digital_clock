@@ -1,5 +1,6 @@
 #include "wifi_manager.h"
 #include "server_manager.h"
+#include "debug_manager.h"
 #include "string.h"
 #include "cJSON.h"
 #include "nvs_flash.h"
@@ -71,17 +72,24 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
   else if (event_base == IP_EVENT &&
            event_id == IP_EVENT_STA_GOT_IP)
   {
+    restart_count = 0;
     wifi_manager_sta_connected = true;
     ESP_LOGI(TAG, "STA started");
   }
   else if (event_base == WIFI_EVENT &&
            event_id == WIFI_EVENT_STA_DISCONNECTED)
   {
-    wifi_manager_ap_connected = false;//
+    if (restart_count == 0)
+    {
+      wifi_event_sta_disconnected_t *evt = (wifi_event_sta_disconnected_t *)event_data;
+      debug_manager_add_log("STA Disconnected. Reason code: %d", evt->reason);
+    }
+
+    wifi_manager_ap_connected = false;
     wifi_manager_sta_connected = false;
 
     restart_count++;
-    ESP_LOGI(TAG, "Wifi disconnected, retrying connection... %d/%d", restart_count, max_restart_count);
+    ESP_LOGI(TAG, "Retrying connection... %d/%d", restart_count, max_restart_count);
     if (restart_count > max_restart_count)
     {
       restart_count = 0;
@@ -120,8 +128,8 @@ static void start_wifi_task(void *arg)
 
   if (valid_credentials)
   {
-    ESP_LOGI(TAG,"ssid: %s", ssid);
-    ESP_LOGI(TAG,"pass: %s", pass);
+    ESP_LOGI(TAG, "ssid: %s", ssid);
+    ESP_LOGI(TAG, "pass: %s", pass);
     init_sta(ssid, pass);
   }
   else

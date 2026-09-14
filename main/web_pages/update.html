@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relogio</title>
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <img src="favicon.svg" class="bar-push-right" alt="Home" width="64" height="64">
+        <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
+        <button class="btn-nav btn-border-middle" onclick="navigate('settings')">Definições</button>
+        <button class="btn-nav active btn-border-right" onclick="navigate('update')">Update</button>
+    </nav>
+
+    <h1>Update</h1>
+
+    <section>
+        <p>Verifica automaticamente se existe uma versão mais recente do firmware e permite instalá-la.</p>
+    </section>
+
+    <label id="update-status">a verificar...</label>
+    <button id="btn-update" onclick="update_firmware()" disabled>Update</button>
+    <!-- need a good space here -->
+    <details>
+        <summary>Avançado</summary>
+        <h2> Atualização manual </h2>
+        <section>
+            <p>Ficheiro .bin com o novo firmware</p>
+        </section>
+        <input type="file" id="file_picker" accept=".bin">
+        <div class="btn-row">
+            <button id="btn-upload" onclick="upload_firmware(document.getElementById('file_picker').files[0])"
+                disabled>Update</button>
+        </div>
+    </details>
+    <div class="feedback" id="fb-update"></div>
+
+    <script src="update.js" defer></script>
+</body>
+
+</html>

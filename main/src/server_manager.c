@@ -3,6 +3,7 @@
 #include "wifi_manager.h"
 #include "clock_face.h"
 #include "ota_manager.h"
+#include "debug_manager.h"
 #include "ctype.h"
 #include "cJSON.h"
 #include "nvs_flash.h"
@@ -24,18 +25,41 @@ typedef struct
 
 extern const uint8_t favicon_start[] asm("_binary_favicon_svg_start");
 extern const uint8_t favicon_end[] asm("_binary_favicon_svg_end");
+
 extern const uint8_t index_start[] asm("_binary_index_html_start");
 extern const uint8_t index_end[] asm("_binary_index_html_end");
+
+extern const uint8_t settings_start[] asm("_binary_settings_html_start");
+extern const uint8_t settings_end[] asm("_binary_settings_html_end");
+
+extern const uint8_t update_start[] asm("_binary_update_html_start");
+extern const uint8_t update_end[] asm("_binary_update_html_end");
+
 extern const uint8_t css_start[] asm("_binary_style_css_start");
 extern const uint8_t css_end[] asm("_binary_style_css_end");
+
 extern const uint8_t js_start[] asm("_binary_script_js_start");
 extern const uint8_t js_end[] asm("_binary_script_js_end");
 
+extern const uint8_t clock_face_js_start[] asm("_binary_clock_face_js_start");
+extern const uint8_t clock_face_js_end[] asm("_binary_clock_face_js_end");
+
+extern const uint8_t settings_js_start[] asm("_binary_settings_js_start");
+extern const uint8_t settings_js_end[] asm("_binary_settings_js_end");
+
+extern const uint8_t update_js_start[] asm("_binary_update_js_start");
+extern const uint8_t update_js_end[] asm("_binary_update_js_end");
+
 static const static_file_t files[] = {
     {"/", "text/html", index_start, index_end},
-    {"/files/style.css", "text/css", css_start, css_end},
-    {"/files/script.js", "application/javascript", js_start, js_end},
-    {"/files/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
+    {"/settings.html", "text/html", settings_start, settings_end},
+    {"/update.html", "text/html", update_start, update_end},
+    {"/style.css", "text/css", css_start, css_end},
+    {"/script.js", "application/javascript", js_start, js_end},
+    {"/settings.js", "application/javascript", settings_js_start, settings_js_end},
+    {"/clock_face.js", "application/javascript", clock_face_js_start, clock_face_js_end},
+    {"/update.js", "application/javascript", update_js_start, update_js_end},
+    {"/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
 };
 
 static void configure_mdns();
@@ -60,7 +84,7 @@ static route_t index_route = {
     .args = NULL,
 };
 static route_t files_route = {
-    .uri = "/files/*",
+    .uri = "/*",
     .method = HTTP_GET,
     .route_handler = file_handler,
     .args = NULL,
@@ -84,16 +108,16 @@ void server_manager_init()
         return;
     }
 
-    server_manager_add_route(&mdns_route);
-
     mdns_init();
     configure_mdns();
 
-    server_manager_add_route(&index_route);
-    server_manager_add_route(&files_route);
     ota_manager_register_route();
     wifi_register_route();
     clock_face_register_route();
+    debug_manager_register_route();
+    server_manager_add_route(&mdns_route);
+    server_manager_add_route(&index_route);
+    server_manager_add_route(&files_route);
 }
 
 void server_manager_deinit()
@@ -238,29 +262,32 @@ esp_err_t file_handler(httpd_req_t *req)
 {
     for (int i = 0; i < sizeof(files) / sizeof(static_file_t); i++)
     {
-        if (strcmp(req->uri, files[i].uri) == 0)
+        if (strcmp(req->uri, files[i].uri) != 0)
         {
-            const esp_app_desc_t *app_desc = esp_app_get_description();
-            char etag[40];
-            snprintf(etag, sizeof(etag), "\"%s\"", app_desc->version);
-
-            char client_etag[40] = {0};
-            if (httpd_req_get_hdr_value_str(req, "If-None-Match", client_etag, sizeof(client_etag)) == ESP_OK)
-            {
-                if (strcmp(client_etag, etag) == 0)
-                {
-                    httpd_resp_set_status(req, "304 Not Modified");
-                    return httpd_resp_send(req, NULL, 0);
-                }
-            }
-
-            httpd_resp_set_hdr(req, "Cache-Control", "no-cache, must-revalidate");
-            httpd_resp_set_hdr(req, "ETag", etag);
-
-            httpd_resp_set_type(req, files[i].type);
-            return httpd_resp_send(req, (const char *)files[i].start, files[i].end - files[i].start);
+            continue;
         }
+
+        const esp_app_desc_t *app_desc = esp_app_get_description();
+        char etag[40];
+        snprintf(etag, sizeof(etag), "\"%s\"", app_desc->version);
+
+        char client_etag[40] = {0};
+        if (httpd_req_get_hdr_value_str(req, "If-None-Match", client_etag, sizeof(client_etag)) == ESP_OK)
+        {
+            if (strcmp(client_etag, etag) == 0)
+            {
+                httpd_resp_set_status(req, "304 Not Modified");
+                return httpd_resp_send(req, NULL, 0);
+            }
+        }
+
+        httpd_resp_set_hdr(req, "Cache-Control", "no-cache, must-revalidate");
+        httpd_resp_set_hdr(req, "ETag", etag);
+
+        httpd_resp_set_type(req, files[i].type);
+        return httpd_resp_send(req, (const char *)files[i].start, files[i].end - files[i].start);
     }
+
     httpd_resp_send_404(req);
     return ESP_OK;
 }

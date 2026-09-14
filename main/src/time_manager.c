@@ -1,5 +1,6 @@
 #include "time_manager.h"
 #include "wifi_manager.h"
+#include "debug_manager.h"
 #include "esp_http_client.h"
 #include "esp_sntp.h"
 #include "esp_timer.h" //
@@ -200,7 +201,7 @@ static bool get_sunrise_sunset_times(time_t *sunrise, time_t *sunset)
     char *body = http_get(url);
     if (!body)
     {
-        ESP_LOGE(TAG, "failled to get sunrise sunset json");
+        debug_manager_add_log("failled to get sunrise sunset json");
         return false;
     }
 
@@ -208,7 +209,7 @@ static bool get_sunrise_sunset_times(time_t *sunrise, time_t *sunset)
     free(body);
     if (!root)
     {
-        ESP_LOGE(TAG, "failled to format sunrise sunset json");
+        debug_manager_add_log("failled to format sunrise sunset json");
         return false;
     }
 
@@ -247,7 +248,7 @@ static bool get_sunrise_sunset_times(time_t *sunrise, time_t *sunset)
     }
     else
     {
-        ESP_LOGE(TAG, "API returned non-OK status");
+        debug_manager_add_log("API returned non-OK status");
     }
 
     cJSON_Delete(root);
@@ -278,7 +279,7 @@ static void sync_task(void *arg)
     sync_semaphore = xSemaphoreCreateBinary();
     if (!wifi_manager_sta_connected)
     {
-        ESP_LOGE(TAG, "trying to initialize time without sta connection");
+        debug_manager_add_log( "trying to initialize time without sta connection");
     }
     get_location();
 
@@ -286,7 +287,7 @@ static void sync_task(void *arg)
     {
         if (!wifi_manager_sta_connected)
         {
-            ESP_LOGE(TAG, "trying to sync time without sta connection");
+            debug_manager_add_log( "trying to sync time without sta connection");
         }
         
         ESP_LOGI(TAG, "sync started");
