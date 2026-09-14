@@ -1,9 +1,9 @@
 function toggle_password_visibility(e, id) {
-    if (e.innerHTML == 'Show') {
-        e.innerHTML = 'Hide'
+    if (e.innerHTML == 'Ver') {
+        e.innerHTML = 'X'
         document.getElementById(id).type = "text";
     } else {
-        e.innerHTML = 'Show'
+        e.innerHTML = 'Ver'
         document.getElementById(id).type = "password";
     }
 }
@@ -22,10 +22,10 @@ async function save(target) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ssid, password: pass })
             });
-            r.ok ? feedback('wifi', true, 'saved — reconnecting…')
-                : feedback('wifi', false, 'error ' + r.status);
+            r.ok ? feedback('wifi', true, 'guardado — a reconectar...')
+                : feedback('wifi', false, 'erro: ' + r.status);
         } catch {
-            feedback('wifi', false, 'could not reach device');
+            feedback('wifi', false, 'dispositivo fora de alcance');
         }
 
     } else if (target === 'mdns') {
@@ -35,7 +35,7 @@ async function save(target) {
             return;
         }
         if (!/^[a-z0-9-]+$/i.test(host)) {
-            feedback('mdns', false, 'letters, numbers and hyphens only');
+            feedback('mdns', false, 'apenas letras, numeros e hifens');
             return;
         }
         try {
@@ -45,15 +45,15 @@ async function save(target) {
                 body: JSON.stringify({ mdns: host })
             });
             if (r.ok) {
-                feedback('mdns', true, 'saved — restarting mDNS…');
+                feedback('mdns', true, 'guardado — pagina vai atualizar em 2s');
                 setTimeout(() => {
                     window.location.href = `http://${host}.local`;
                 }, 2000);
             } else {
-                feedback('mdns', false, 'error ' + r.status);
+                feedback('mdns', false, 'erro ' + r.status);
             }
         } catch {
-            feedback('mdns', false, 'could not reach device');
+            feedback('mdns', false, 'dispositivo fora de alcance');
         }
     }
 }

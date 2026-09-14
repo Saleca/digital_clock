@@ -27,7 +27,7 @@ void app_main(void)
 
     const esp_app_desc_t *app_desc = esp_app_get_description();
     ESP_LOGI(TAG, "Firmware version: %s - %s %s", app_desc->version, app_desc->date, app_desc->time);
-    
+
     esp_err_t err;
     err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -55,14 +55,14 @@ void app_main(void)
     if (wifi_manager_ap_connected)
     {
         // AP will only display animations
-        clock_face_refresh();
+        clock_face_update_fill_colours();
         while (!wifi_manager_sta_connected)
         {
             for (int h = 0; h < 12; h++)
             {
                 for (int m = 0; m < 60; m++)
                 {
-                    clock_face_set_time(h, m, 60);
+                    clock_face_set_time(h, m, -1);
                     vTaskDelay(pdMS_TO_TICKS(100));
                 }
                 if (wifi_manager_sta_connected)
@@ -101,7 +101,7 @@ static void time_task(void *arg)
     {
         clock_face_set_day_mode(true);
     }
-    clock_face_refresh();
+    clock_face_update_fill_colours();
 
     while (1)
     {
@@ -126,6 +126,7 @@ static void time_task(void *arg)
 
         now += time_manager_get_time_offset();
         struct tm *timeinfo = gmtime(&now);
+
         clock_face_set_time(timeinfo->tm_hour % 12, timeinfo->tm_min, timeinfo->tm_sec);
 
         struct timeval tv;

@@ -41,6 +41,7 @@ async function fetch_current_version() {
 
     const text = await response.text();
     current_version = text.trim();
+    document.getElementById('version').textContent = `versão instalada: ${current_version}`;
 }
 
 async function fetch_firmware() {
@@ -62,20 +63,21 @@ function check_remote_version() {
                 document.getElementById('update-status').textContent = `update disponivel: ${remote_version}`;
                 document.getElementById('btn-update').disabled = false;
             } else {
-                document.getElementById('update-status').textContent = 'já está atualizado';
+                document.getElementById('update-status').textContent = 'não existem updates.';
             }
         })
         .catch(err => console.error('Error checking for update:', err));
 }
 
 function update_firmware() {
-    feedback('update', true, 'downloading firmware');
+    feedback('update', true, 'download do firmware começou');
     fetch_firmware().then(file => {
         upload_firmware(file);
     });
 }
 
 async function upload_firmware(file) {
+    feedback('update', true, 'a enviar firmware para o dispositivo');
     try {
         const res = await fetch(routes.post_flash, {
             method: 'POST',
@@ -87,12 +89,12 @@ async function upload_firmware(file) {
         }
         feedback('update', true, await res.text());
     } catch {
-        feedback('update', false, 'could not reach device');
+        feedback('update', false, 'dispositivo fora de alcance');
     }
 }
 
 const file_picker_input = document.getElementById('file_picker');
-const upload_btn = document.getElementById('btn-upload'); 
+const upload_btn = document.getElementById('btn-upload');
 
 file_picker_input.addEventListener('change', () => {
     upload_btn.disabled = file_picker_input.files.length === 0;

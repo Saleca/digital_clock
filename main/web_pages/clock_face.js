@@ -48,7 +48,7 @@ function render_colour_picker(key) {
     document.getElementById('swatch-' + key).style.background = hex;
 
     document.querySelectorAll(`.nav-bar[data-slot="${key}"] button`).forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
+        btn.classList.toggle('selected', btn.dataset.mode === mode);
     });
 
     const hue_slider = document.getElementById('hue-' + key);
@@ -59,7 +59,7 @@ function render_colour_picker(key) {
 function remove_preview_mode() {
     if (previewed) {
         previewed = false;
-        preview_colours_button.textContent = 'Preview';
+        preview_colours_button.textContent = 'Pre-visualizar';
         preview_colours_button.classList.remove('save-state');
     }
 }
@@ -85,20 +85,20 @@ async function preview_colours() {
             if (!r.ok) throw new Error('error ' + r.status);
 
             previewed = true;
-            preview_colours_button.textContent = 'Save';
+            preview_colours_button.textContent = 'Guardar';
             preview_colours_button.classList.add('save-state');
-            feedback('colour', true, 'previewing on device…');
+            feedback('colour', true, 'dispositivo atualizado, para gravar clica outra vez');
         } else {
             const r = await fetch(routes.post_clock_save, { method: 'POST' });
             if (!r.ok) throw new Error('error ' + r.status);
 
-            feedback('colour', true, 'saved');
-            preview_colours_button.textContent = 'Preview';
+            feedback('colour', true, 'guardado');
+            preview_colours_button.textContent = 'Pre-visualizar';
             preview_colours_button.classList.remove('save-state');
             previewed = false;
         }
     } catch (e) {
-        feedback('colour', false, e.message || 'could not reach device');
+        feedback('colour', false, e.message || 'dispositivo fora de alcance');
     } finally {
         preview_colours_button.disabled = false;
     }
@@ -182,12 +182,13 @@ has_seconds_checkbox.addEventListener('change', () => {
     remove_preview_mode();
 });
 
-fetch(routes.get_clock).then(res => {
-    if (!res.ok) {
-        throw new Error('error ' + res.status);
-    }
-    return res.json();
-})
+fetch(routes.get_clock)
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('error ' + res.status);
+        }
+        return res.json();
+    })
     .then(data => {
         Object.keys(colour_pickers).forEach(key => {
             const hsv = data[key + '_hs'];

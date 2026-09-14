@@ -13,20 +13,21 @@
 
 <body>
     <nav class="nav-bar">
-        <button class="bar-push-right home"  onclick="navigate('home')">
+        <button class="nav-home" onclick="navigate('home')">
             <img src="favicon.svg" alt="Home" width="64" height="64">
         </button>
         <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
-        <button class="btn-nav active btn-border-middle" onclick="navigate('settings')">Definições</button>
+        <button class="btn-nav selected btn-border-middle" onclick="navigate('settings')">Definições</button>
         <button class="btn-nav btn-border-right" onclick="navigate('update')">Update</button>
     </nav>
 
     <h1>Settings</h1>
-    <!--check if is connected via STA or AP-->
-        <p>introduz as credenciais da wifi</p>
-    
+
     <section>
+        <!-- TODO check if is connected via STA or AP-->
         <h2>Wi-fi</h2>
+        <p>introduz as credenciais da wifi</p>
+
         <label>ssid</label>
         <input type="text" id="wifi-ssid" placeholder="network name" /> <!-- add current ssid for placeholder-->
         <label>password</label>
@@ -40,9 +41,11 @@
 
     <section>
         <h2>mDNS</h2>
+        <p>mudar o url</p>
+
         <label>hostname</label>
         <input type="text" id="mdns-host" placeholder="relogio-sala" />
-        <p style="font-size:0.78rem;color:#3a5060;margin-bottom:0.75rem;margin-top:-0.25rem">interface teria acesso por
+        <p>interface teria acesso por
             <span id="mdns-preview">relogio-sala</span>.local
         </p>
         <div class="btn-row">

@@ -58,9 +58,9 @@ static route_t save_route = {
 static led_strip_handle_t led_strip;
 clock_face_t clock_face = {0};
 
-static int current_hour = 12;
-static int current_minute = 60;
-int current_second = 60;
+static int current_hour = -1;
+static int current_minute = -1;
+int current_second = -1;
 
 colour_rgb_t hour_colour;
 colour_rgb_t minute_colour;
@@ -95,7 +95,7 @@ void clock_face_init(gpio_num_t data_gpio)
 
     set_brightness(clock_face.night_brightness);
     set_colours();
-    clock_face_refresh();
+    clock_face_update_fill_colours();
 }
 
 void clock_face_register_route()
@@ -147,8 +147,8 @@ static cJSON *encode_json_colour(const colour_hsv_t *c)
 {
     cJSON *obj = cJSON_CreateObject();
     cJSON_AddNumberToObject(obj, "h", c->hue);
-    cJSON_AddNumberToObject(obj, "s", c->saturation);
-    cJSON_AddNumberToObject(obj, "v", c->brightness);
+    cJSON_AddNumberToObject(obj, "s", c->saturation > 0 ? 100 : 0);
+    cJSON_AddNumberToObject(obj, "v", c->brightness > 0 ? 100 : 0);
     return obj;
 }
 
@@ -221,6 +221,7 @@ static esp_err_t post_clock_handler(httpd_req_t *req)
 
     if (!cJSON_IsBool(j_has_seconds) || !cJSON_IsBool(j_is_bg_black))
     {
+        ESP_LOGI(TAG, "has seconds is not formatter properly");
         cJSON_Delete(root);
         httpd_resp_set_status(req, "400 Bad Request");
         httpd_resp_sendstr(req, "{\"error\":\"has_seconds and is_background_black must be booleans\"}");
@@ -249,7 +250,7 @@ static esp_err_t post_clock_handler(httpd_req_t *req)
 
     clock_face = preview_face;
     clock_face_set_day_mode(wifi_manager_sta_connected ? time_manager_is_day() : false);
-    clock_face_refresh();
+    clock_face_update_fill_colours();
 
     return ESP_OK;
 }
@@ -269,7 +270,7 @@ static esp_err_t save_handler(httpd_req_t *req)
     }
 }
 
-void clock_face_refresh(void)
+void clock_face_update_fill_colours(void)
 {
     if (!clock_face.is_background_black)
     {
@@ -294,6 +295,8 @@ void clock_face_set_day_mode(bool day)
         set_brightness(clock_face.night_brightness);
     }
     set_colours();
+    clock_face_update_fill_colours();
+    clock_face_set_time(current_hour, current_minute, current_second);
 }
 
 static bool save_clock_pallet()
@@ -414,15 +417,18 @@ static void set_colours(void)
 
 void clock_face_set_time(int hour, int minute, int second)
 {
+    ESP_LOGI(TAG, "%d:%d:%d", hour, minute, clock_face.has_seconds ? second : -1);
+
     set_hour(hour);
     set_minute(minute);
-    set_second(second);
+    set_second(clock_face.has_seconds ? second : -1);
+
     led_strip_refresh(led_strip);
 }
 
 static void set_second(int second)
 {
-    if (current_second < 60)
+    if (current_second != -1)
     {
         if (current_second == current_minute)
         {
@@ -433,8 +439,9 @@ static void set_second(int second)
             clock_face_set_pixel(get_minute_index(current_second), background_colour);
         }
     }
+
     current_second = second;
-    if (current_second == 60)
+    if (current_second < 0 || current_second > 59)
     {
         return;
     }
@@ -444,13 +451,13 @@ static void set_second(int second)
 
 static void set_minute(int minute)
 {
-    if (current_minute < 60)
+    if (current_minute != -1)
     {
         clock_face_set_pixel(get_minute_index(current_minute), background_colour);
     }
 
     current_minute = minute;
-    if (current_minute == 60)
+    if (current_minute < 0 || current_second > 59)
     {
         return;
     }
@@ -460,7 +467,7 @@ static void set_minute(int minute)
 static void set_hour(int hour)
 {
     int hour_index;
-    if (current_hour < 12)
+    if (current_hour != -1)
     {
         hour_index = get_hour_index(current_hour);
         clock_face_set_pixel(hour_index, background_colour);
@@ -468,7 +475,7 @@ static void set_hour(int hour)
     }
 
     current_hour = hour;
-    if (current_hour == 12)
+    if (current_hour < 0 || current_second > 11)
     {
         return;
     }

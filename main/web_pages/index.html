@@ -13,17 +13,15 @@
 
 <body>
     <nav class="nav-bar">
-        <button class="bar-push-right home" onclick="navigate('home')">
+        <button class="nav-home" onclick="navigate('home')">
             <img src="favicon.svg" alt="Home" width="64" height="64">
         </button>
-        <button class="btn-nav active btn-border-left" onclick="navigate('home')">Relógio</button>
+        <button class="btn-nav selected btn-border-left" onclick="navigate('home')">Relógio</button>
         <button class="btn-nav btn-border-middle" onclick="navigate('settings')">Definições</button>
         <button class="btn-nav btn-border-right" onclick="navigate('update')">Update</button>
     </nav>
 
-
     <h1>Relógio</h1>
-
     <p>Escolhe a cor dos ponteiros, ajusta o brilho, pré-visualiza no dispositivo e guarda.</p>
 
     <div id="colour-cards"></div>

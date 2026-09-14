@@ -26,7 +26,7 @@ void clock_face_init(gpio_num_t data_gpio);
 void clock_face_register_route();
 void clock_face_set_time(int hour, int minute, int second);
 void clock_face_set_day_mode(bool day);
-void clock_face_refresh(void);
+void clock_face_update_fill_colours(void);
 
 void clock_face_set_pixel(int i, colour_rgb_t colour);
 void clock_face_fill_hours(colour_rgb_t colour);
