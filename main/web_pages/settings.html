@@ -13,7 +13,9 @@
 
 <body>
     <nav class="nav-bar">
-        <img src="favicon.svg" class="bar-push-right" alt="Home" width="64" height="64">
+        <button class="bar-push-right home"  onclick="navigate('home')">
+            <img src="favicon.svg" alt="Home" width="64" height="64">
+        </button>
         <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
         <button class="btn-nav active btn-border-middle" onclick="navigate('settings')">Definições</button>
         <button class="btn-nav btn-border-right" onclick="navigate('update')">Update</button>
@@ -21,9 +23,7 @@
 
     <h1>Settings</h1>
     <!--check if is connected via STA or AP-->
-    <section>
         <p>introduz as credenciais da wifi</p>
-    </section>
     
     <section>
         <h2>Wi-fi</h2>

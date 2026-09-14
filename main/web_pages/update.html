@@ -13,17 +13,16 @@
 
 <body>
     <nav class="nav-bar">
-        <img src="favicon.svg" class="bar-push-right" alt="Home" width="64" height="64">
-        <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
+        <button class="bar-push-right home" onclick="navigate('home')">
+            <img src="favicon.svg" alt="Home" width="64" height="64">
+        </button> <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
         <button class="btn-nav btn-border-middle" onclick="navigate('settings')">Definições</button>
         <button class="btn-nav active btn-border-right" onclick="navigate('update')">Update</button>
     </nav>
 
     <h1>Update</h1>
 
-    <section>
-        <p>Verifica automaticamente se existe uma versão mais recente do firmware e permite instalá-la.</p>
-    </section>
+    <p>Verifica automaticamente se existe uma versão mais recente do firmware e permite instalá-la.</p>
 
     <label id="update-status">a verificar...</label>
     <button id="btn-update" onclick="update_firmware()" disabled>Update</button>

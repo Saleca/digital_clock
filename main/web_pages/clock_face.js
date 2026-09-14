@@ -109,16 +109,12 @@ Object.entries(colour_pickers).forEach(([key, colour_picker]) => {
     card.className = 'colour-card';
     card.id = 'card-' + key;
     card.innerHTML = `
+    <h2> ${colour_picker.label}</h2>
     <div class="nav-bar" data-slot="${key}">
-        <div class="colour-card-head">
-            <div class="swatch" id="swatch-${key}"></div>
-            <h2> ${colour_picker.label}</h2>
-        </div>
-        <div class="colour-card-bar">
-            <button data-mode="colour" class="btn-nav bar-stretch btn-border-left">Cor</button>
-            <button data-mode="white" class="btn-nav bar-stretch btn-border-middle">Branco</button>
-            <button data-mode="black" class="btn-nav bar-stretch btn-border-right">Preto</button>
-        </div>
+        <div class="swatch" id="swatch-${key}"></div>
+        <button data-mode="colour" class="btn-nav bar-stretch btn-border-left">Cor</button>
+        <button data-mode="white" class="btn-nav bar-stretch btn-border-middle">Branco</button>
+        <button data-mode="black" class="btn-nav bar-stretch btn-border-right">Preto</button>
     </div>
     <input type="range" class="hue-slider" id="hue-${key}" min="0" max="359" value="${colour_picker.h}">
     `;
