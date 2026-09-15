@@ -8,6 +8,8 @@
 #include "cJSON.h"
 #include "nvs_flash.h"
 #include "mdns.h"
+#include "dns_server.h"
+#include "lwip/inet.h"
 #include "esp_app_desc.h"
 #include "esp_log.h"
 
@@ -73,10 +75,12 @@ static const static_file_t files[] = {
 static void configure_mdns();
 static esp_err_t generic_handler(httpd_req_t *req);
 static esp_err_t mdns_handler(httpd_req_t *req);
-esp_err_t file_handler(httpd_req_t *req);
+static esp_err_t file_handler(httpd_req_t *req);
+static void start_captive_dns();
 
 static bool routing_enabled = true;
 static httpd_handle_t server = NULL;
+static dns_server_handle_t dns_server = NULL;
 
 static route_t mdns_route = {
     .uri = "/post/mdns",
@@ -105,6 +109,11 @@ void server_manager_init()
     if (server != NULL)
     {
         return;
+    }
+
+    if (wifi_manager_ap_connected)
+    {
+        start_captive_dns();
     }
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -263,10 +272,10 @@ static void configure_mdns()
         mdns_service_remove("_http", "_tcp");
     }
     mdns_service_add(current_mdns, "_http", "_tcp", 80, NULL, 0);
-    ESP_LOGI(TAG, "settings available from: %s.local/", current_mdns);
+    ESP_LOGI(TAG, "interface available from: %s.local/", current_mdns);
 }
 
-esp_err_t file_handler(httpd_req_t *req)
+static esp_err_t file_handler(httpd_req_t *req)
 {
     for (int i = 0; i < sizeof(files) / sizeof(static_file_t); i++)
     {
@@ -296,6 +305,41 @@ esp_err_t file_handler(httpd_req_t *req)
         return httpd_resp_send(req, (const char *)files[i].start, files[i].end - files[i].start);
     }
 
+    if (wifi_manager_ap_connected)
+    {
+
+        httpd_resp_set_status(req, "302 Found");
+        httpd_resp_set_hdr(req, "Location", "/settings");
+        httpd_resp_send(req, "Redirect to settings", HTTPD_RESP_USE_STRLEN);
+        return ESP_OK;
+    }
+
     httpd_resp_send_404(req);
     return ESP_OK;
+}
+
+static void start_captive_dns()
+{
+    if (dns_server != NULL)
+    {
+        return;
+    }
+
+    esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    esp_netif_ip_info_t ip_info;
+    esp_netif_get_ip_info(netif, &ip_info);
+
+    char ip_addr[16];
+    inet_ntoa_r(ip_info.ip.addr, ip_addr, 16);
+
+    char captiveportal_uri[40];
+    snprintf(captiveportal_uri, sizeof(captiveportal_uri), "http://%s/settings", ip_addr);
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_netif_dhcps_stop(netif));
+    ESP_ERROR_CHECK(esp_netif_dhcps_option(netif, ESP_NETIF_OP_SET, ESP_NETIF_CAPTIVEPORTAL_URI, captiveportal_uri, strlen(captiveportal_uri)));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_netif_dhcps_start(netif));
+
+    dns_server_config_t config = DNS_SERVER_CONFIG_SINGLE("*", "WIFI_AP_DEF");
+    dns_server = start_dns_server(&config);
+    ESP_LOGI(TAG, "captive dns start: %s", dns_server != NULL ? "ok" : "FAILED");
 }
