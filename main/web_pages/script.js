@@ -1,15 +1,18 @@
 //navigation
 const routes = {
     home: '/',
-    settings: 'settings.html',
-    update: 'update.html',
+    settings: 'settings',
+    update: 'update',
+    logs: 'logs',
     post_credentials: '/post/credentials',
     post_mdns: '/post/mdns',
-    get_clock: '/get/clock',
     post_clock_preview: '/post/clock',
     post_clock_save: '/post/clock_save',
+    post_flash: '/post/flash',
     get_version: '/get/version',
-    post_flash: '/post/flash'
+    get_clock: '/get/clock',
+    get_logs: '/get/logs',
+    delete_logs: '/delete/logs',
 };
 
 function navigate(target) {

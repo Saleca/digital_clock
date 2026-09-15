@@ -156,12 +156,18 @@ static esp_err_t get_clock_handler(httpd_req_t *req)
 {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "hour_hs", encode_json_colour(&clock_face.hour_hs));
+    cJSON_AddBoolToObject(root, "is_hour_black", clock_face.is_hour_black);
+
     cJSON_AddItemToObject(root, "minute_hs", encode_json_colour(&clock_face.minute_hs));
-    cJSON_AddItemToObject(root, "second_hs", encode_json_colour(&clock_face.second_hs));
-    cJSON_AddItemToObject(root, "background_hs", encode_json_colour(&clock_face.background_hs));
+    cJSON_AddBoolToObject(root, "is_minute_black", clock_face.is_minute_black);
 
     cJSON_AddBoolToObject(root, "has_seconds", clock_face.has_seconds);
+    cJSON_AddItemToObject(root, "second_hs", encode_json_colour(&clock_face.second_hs));
+    cJSON_AddBoolToObject(root, "is_second_black", clock_face.is_second_black);
+
+    cJSON_AddItemToObject(root, "background_hs", encode_json_colour(&clock_face.background_hs));
     cJSON_AddBoolToObject(root, "is_background_black", clock_face.is_background_black);
+
     cJSON_AddNumberToObject(root, "day_brightness", clock_face.day_brightness);
     cJSON_AddNumberToObject(root, "night_brightness", clock_face.night_brightness);
 
@@ -214,17 +220,23 @@ static esp_err_t post_clock_handler(httpd_req_t *req)
         return ESP_OK;
     }
 
+    cJSON *j_is_hour_black = cJSON_GetObjectItem(root, "is_hour_black");
+    cJSON *j_is_minute_black = cJSON_GetObjectItem(root, "is_minute_black");
     cJSON *j_has_seconds = cJSON_GetObjectItem(root, "has_seconds");
+    cJSON *j_is_second_black = cJSON_GetObjectItem(root, "is_second_black");
     cJSON *j_is_bg_black = cJSON_GetObjectItem(root, "is_background_black");
     cJSON *j_day = cJSON_GetObjectItem(root, "day_brightness");
     cJSON *j_night = cJSON_GetObjectItem(root, "night_brightness");
 
-    if (!cJSON_IsBool(j_has_seconds) || !cJSON_IsBool(j_is_bg_black))
+    if (!cJSON_IsBool(j_has_seconds) ||
+        !cJSON_IsBool(j_is_bg_black) ||
+        !cJSON_IsBool(j_is_hour_black) ||
+        !cJSON_IsBool(j_is_minute_black) ||
+        !cJSON_IsBool(j_is_second_black))
     {
-        ESP_LOGI(TAG, "has seconds is not formatter properly");
         cJSON_Delete(root);
         httpd_resp_set_status(req, "400 Bad Request");
-        httpd_resp_sendstr(req, "{\"error\":\"has_seconds and is_background_black must be booleans\"}");
+        httpd_resp_sendstr(req, "{\"error\":\"has_seconds and is_X_black must be booleans\"}");
         return ESP_OK;
     }
 
@@ -241,7 +253,10 @@ static esp_err_t post_clock_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, "{\"ok\":true}");
 
+    preview_face.is_hour_black = cJSON_IsTrue(j_is_hour_black);
+    preview_face.is_minute_black = cJSON_IsTrue(j_is_minute_black);
     preview_face.has_seconds = cJSON_IsTrue(j_has_seconds);
+    preview_face.is_second_black = cJSON_IsTrue(j_is_second_black);
     preview_face.is_background_black = cJSON_IsTrue(j_is_bg_black);
     preview_face.day_brightness = (uint8_t)j_day->valueint;
     preview_face.night_brightness = (uint8_t)j_night->valueint;
@@ -268,35 +283,6 @@ static esp_err_t save_handler(httpd_req_t *req)
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
-}
-
-void clock_face_update_fill_colours(void)
-{
-    if (!clock_face.is_background_black)
-    {
-        clock_face_fill_hours(background_colour);
-        clock_face_fill_minutes(background_colour);
-    }
-    else
-    {
-        clock_face_fill_hours(BLACK);
-        clock_face_fill_minutes(BLACK);
-    }
-}
-
-void clock_face_set_day_mode(bool day)
-{
-    if (day)
-    {
-        set_brightness(clock_face.day_brightness);
-    }
-    else
-    {
-        set_brightness(clock_face.night_brightness);
-    }
-    set_colours();
-    clock_face_update_fill_colours();
-    clock_face_set_time(current_hour, current_minute, current_second);
 }
 
 static bool save_clock_pallet()
@@ -338,6 +324,7 @@ static bool load_clock_pallet()
     if (err != ESP_OK || len != sizeof(clock_face_t))
     {
         debug_manager_add_log("failled to load clock face");
+        err = ESP_ERR_NVS_INVALID_LENGTH;
     }
 
     nvs_close(nvs);
@@ -352,55 +339,112 @@ static void set_default_clock_face(void)
         .brightness = 100,
     };
 
+    clock_face.is_hour_black = false;
+    clock_face.is_minute_black = false;
     colour_hs.hue = YELLOW;
     clock_face.hour_hs = colour_hs;
     clock_face.minute_hs = colour_hs;
 
     clock_face.has_seconds = true;
+    clock_face.is_second_black = false;
     colour_hs.saturation = 0;
     colour_hs.brightness = 100,
     clock_face.second_hs = colour_hs;
 
     clock_face.is_background_black = true;
-    if (!clock_face.is_background_black)
-    {
-        colour_hs.saturation = 100;
-        colour_hs.brightness = 100;
-        colour_hs.hue = BLUE;
-    }
-    else
-    {
-        colour_hs.saturation = 0;
-        colour_hs.brightness = 0;
-    }
+    colour_hs.saturation = 0;
+    colour_hs.brightness = 0;
     clock_face.background_hs = colour_hs;
 
     clock_face.day_brightness = 50;
     clock_face.night_brightness = 5;
 }
 
+void clock_face_update_fill_colours(void)
+{
+    clock_face_fill_hours(background_colour);
+    clock_face_fill_minutes(background_colour);
+}
+
+void clock_face_set_day_mode(bool day)
+{
+    if (day)
+    {
+        set_brightness(clock_face.day_brightness);
+    }
+    else
+    {
+        set_brightness(clock_face.night_brightness);
+    }
+    set_colours();
+    clock_face_update_fill_colours();
+    clock_face_set_time(current_hour, current_minute, current_second);
+}
+
 static void set_brightness(uint8_t brightness)
 {
-    clock_face.hour_hs.brightness = brightness;
-    clock_face.minute_hs.brightness = brightness;
+    if (!clock_face.is_hour_black)
+    {
+        clock_face.hour_hs.brightness = brightness;
+    }
+    else
+    {
+        clock_face.hour_hs.brightness = 0;
+    }
 
-    if (clock_face.has_seconds)
+    if (!clock_face.is_minute_black)
+    {
+        clock_face.minute_hs.brightness = brightness;
+    }
+    else
+    {
+        clock_face.minute_hs.brightness = 0;
+    }
+
+    if (!clock_face.is_second_black)
     {
         clock_face.second_hs.brightness = brightness;
+    }
+    else
+    {
+        clock_face.second_hs.brightness = 0;
     }
 
     if (!clock_face.is_background_black)
     {
         clock_face.background_hs.brightness = brightness;
     }
+    else
+    {
+        clock_face.background_hs.brightness = 0;
+    }
 }
 
 static void set_colours(void)
 {
-    hour_colour = normalize_colour(clock_face.hour_hs);
-    minute_colour = normalize_colour(clock_face.minute_hs);
+    if (clock_face.is_hour_black)
+    {
+        hour_colour = BLACK;
+    }
+    else
+    {
+        hour_colour = normalize_colour(clock_face.hour_hs);
+    }
 
-    if (clock_face.has_seconds)
+    if (clock_face.is_minute_black)
+    {
+        minute_colour = BLACK;
+    }
+    else
+    {
+        minute_colour = normalize_colour(clock_face.minute_hs);
+    }
+
+    if (clock_face.is_second_black)
+    {
+        second_colour = BLACK;
+    }
+    else
     {
         second_colour = normalize_colour(clock_face.second_hs);
     }
@@ -417,17 +461,27 @@ static void set_colours(void)
 
 void clock_face_set_time(int hour, int minute, int second)
 {
-    ESP_LOGI(TAG, "%d:%d:%d", hour, minute, clock_face.has_seconds ? second : -1);
+    // ESP_LOGI(TAG, "%d:%d:%d", hour, minute, clock_face.has_seconds ? second : -1);
 
     set_hour(hour);
     set_minute(minute);
-    set_second(clock_face.has_seconds ? second : -1);
+    set_second(second);
 
     led_strip_refresh(led_strip);
 }
 
 static void set_second(int second)
 {
+    if (!clock_face.has_seconds )
+    {
+        if (current_second == -1)
+        {
+            return;
+        }
+
+        second = -1;
+    }
+
     if (current_second != -1)
     {
         if (current_second == current_minute)
@@ -446,6 +500,7 @@ static void set_second(int second)
         return;
     }
 
+    // ESP_LOGI(TAG, "second %d - index %d", current_second, get_minute_index(current_second));
     clock_face_set_pixel(get_minute_index(current_second), second_colour);
 }
 
@@ -457,10 +512,12 @@ static void set_minute(int minute)
     }
 
     current_minute = minute;
-    if (current_minute < 0 || current_second > 59)
+    if (current_minute < 0 || current_minute > 59)
     {
         return;
     }
+
+    // ESP_LOGI(TAG, "minute %d - index %d", current_minute, get_minute_index(current_minute));
     clock_face_set_pixel(get_minute_index(current_minute), minute_colour);
 }
 
@@ -475,18 +532,21 @@ static void set_hour(int hour)
     }
 
     current_hour = hour;
-    if (current_hour < 0 || current_second > 11)
+    if (current_hour < 0 || current_hour > 11)
     {
         return;
     }
 
     hour_index = get_hour_index(current_hour);
+
+    // ESP_LOGI(TAG, "hour %d - index %d", current_hour, hour_index);
     clock_face_set_pixel(hour_index, hour_colour);
     clock_face_set_pixel(hour_index + 1, hour_colour);
 }
 
 void clock_face_set_pixel(int i, colour_rgb_t colour)
 {
+    //ESP_LOGI(TAG, "i %d - colour (%d,%d,%d)", i, colour.red, colour.green, colour.blue);
     led_strip_set_pixel(led_strip, i, colour.red, colour.green, colour.blue);
 }
 

@@ -35,6 +35,9 @@ extern const uint8_t settings_end[] asm("_binary_settings_html_end");
 extern const uint8_t update_start[] asm("_binary_update_html_start");
 extern const uint8_t update_end[] asm("_binary_update_html_end");
 
+extern const uint8_t logs_start[] asm("_binary_logs_html_start");
+extern const uint8_t logs_end[] asm("_binary_logs_html_end");
+
 extern const uint8_t css_start[] asm("_binary_style_css_start");
 extern const uint8_t css_end[] asm("_binary_style_css_end");
 
@@ -50,15 +53,20 @@ extern const uint8_t settings_js_end[] asm("_binary_settings_js_end");
 extern const uint8_t update_js_start[] asm("_binary_update_js_start");
 extern const uint8_t update_js_end[] asm("_binary_update_js_end");
 
+extern const uint8_t logs_js_start[] asm("_binary_logs_js_start");
+extern const uint8_t logs_js_end[] asm("_binary_logs_js_end");
+
 static const static_file_t files[] = {
     {"/", "text/html", index_start, index_end},
-    {"/settings.html", "text/html", settings_start, settings_end},
-    {"/update.html", "text/html", update_start, update_end},
+    {"/settings", "text/html", settings_start, settings_end},
+    {"/update", "text/html", update_start, update_end},
+    {"/logs", "text/html", logs_start, logs_end},
     {"/style.css", "text/css", css_start, css_end},
     {"/script.js", "application/javascript", js_start, js_end},
     {"/settings.js", "application/javascript", settings_js_start, settings_js_end},
     {"/clock_face.js", "application/javascript", clock_face_js_start, clock_face_js_end},
     {"/update.js", "application/javascript", update_js_start, update_js_end},
+    {"/logs.js", "application/javascript", logs_js_start, logs_js_end},
     {"/favicon.svg", "image/svg+xml", favicon_start, favicon_end},
 };
 

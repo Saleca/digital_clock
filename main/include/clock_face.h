@@ -8,11 +8,16 @@
 typedef struct
 {
     colour_hsv_t hour_hs;
-    colour_hsv_t minute_hs;
-    colour_hsv_t second_hs;
-    colour_hsv_t background_hs;
+    bool is_hour_black;
 
+    colour_hsv_t minute_hs;
+    bool is_minute_black;
+
+    colour_hsv_t second_hs;
+    bool is_second_black;
     bool has_seconds;
+
+    colour_hsv_t background_hs;
     bool is_background_black;
 
     uint8_t day_brightness;

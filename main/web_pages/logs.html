@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relogio</title>
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <button class="nav-home" onclick="navigate('home')">
+            <img src="favicon.svg" alt="Home" width="64" height="64">
+        </button> <button class="btn-nav btn-border-left" onclick="navigate('home')">Relógio</button>
+        <button class="btn-nav btn-border-middle" onclick="navigate('settings')">Definições</button>
+        <button class="btn-nav btn-border-right" onclick="navigate('update')">Update</button>
+    </nav>
+
+    <h1>Logs</h1>
+    <p>Error logs.</p>
+    <p id="logs">...</p>
+
+    <button id="btn-delete" onclick="delete_logs()">Apagar Logs</button>
+    <div class="feedback" id="fb-logs"></div>
+
+    <script src="logs.js" defer></script>
+</body>
+
+</html>

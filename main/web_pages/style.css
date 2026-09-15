@@ -341,3 +341,8 @@ button#action-btn:disabled {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
+
+#logs {
+    white-space: pre-wrap;
+    font-family: monospace;
+}
